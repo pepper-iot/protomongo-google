@@ -1,4 +1,4 @@
-module github.com/pepper-iot/protomongo-structpb
+module github.com/pepper-iot/protomongo-google
 
 go 1.21.3
 
