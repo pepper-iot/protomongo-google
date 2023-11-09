@@ -1,52 +1,85 @@
 package timestamppb_bson
 
 import (
-	"github.com/golang/protobuf/ptypes"
+	"fmt"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"time"
 )
 
 var (
-	// Time type
-	timeType = reflect.TypeOf(time.Time{})
-	// Protobuf Timestamp type
-	TimestampType = reflect.TypeOf(timestamp.Timestamp{})
+	TimestampType = reflect.TypeOf((*timestamppb.Timestamp)(nil))
 )
 
 // TimestampCodec is codec for Protobuf Timestamp
 type TimestampCodec struct{}
 
-// EncodeValue encodes Protobuf Timestamp value to BSON value
-func (e *TimestampCodec) EncodeValue(ectx bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
-	v := val.Interface().(timestamp.Timestamp)
-	t, err := ptypes.Timestamp(&v)
-	if err != nil {
-		return err
+// EncodeValue is the ValueEncoderFunc for *timestamppb.Timestamp.
+func (c *TimestampCodec) EncodeValue(ec bsoncodec.EncodeContext, vw bsonrw.ValueWriter, v reflect.Value) error {
+	if !v.IsValid() || v.Type() != TimestampType {
+		return bsoncodec.ValueEncoderError{
+			Name:     "TimestampCodec.EncodeValue",
+			Types:    []reflect.Type{TimestampType},
+			Received: v,
+		}
 	}
-	enc, err := ectx.LookupEncoder(timeType)
-	if err != nil {
-		return err
+	ts := v.Interface().(*timestamp.Timestamp)
+	if ts == nil {
+		return vw.WriteNull()
 	}
-	return enc.EncodeValue(ectx, vw, reflect.ValueOf(t.In(time.UTC)))
+	return vw.WriteDateTime(ts.AsTime().UnixMilli())
 }
 
-// DecodeValue decodes BSON value to Timestamp value
-func (e *TimestampCodec) DecodeValue(ectx bsoncodec.DecodeContext, vr bsonrw.ValueReader, val reflect.Value) error {
-	enc, err := ectx.LookupDecoder(timeType)
-	if err != nil {
-		return err
+// DecodeValue is the ValueDecoderFunc for *timestamppb.Timestamp.
+func (c *TimestampCodec) DecodeValue(dc bsoncodec.DecodeContext, vr bsonrw.ValueReader, v reflect.Value) error {
+	if !v.CanSet() || v.Type() != TimestampType {
+		return bsoncodec.ValueDecoderError{
+			Name:     "TimestampCodec.DecodeValue",
+			Types:    []reflect.Type{TimestampType},
+			Received: v,
+		}
 	}
-	var t time.Time
-	if err = enc.DecodeValue(ectx, vr, reflect.ValueOf(&t).Elem()); err != nil {
-		return err
+	var ts *timestamppb.Timestamp
+	switch bsonTyp := vr.Type(); bsonTyp {
+	case bson.TypeDateTime:
+		msec, err := vr.ReadDateTime()
+		if err != nil {
+			return err
+		}
+		ts = timestamppb.New(time.UnixMilli(msec))
+	case bson.TypeInt64:
+		msec, err := vr.ReadInt64()
+		if err != nil {
+			return err
+		}
+		ts = timestamppb.New(time.UnixMilli(msec))
+	case bson.TypeString:
+		s, err := vr.ReadString()
+		if err != nil {
+			return err
+		}
+		t, err := time.Parse(time.RFC3339Nano, s)
+		if err != nil {
+			return err
+		}
+		ts = timestamppb.New(t)
+	case bson.TypeNull:
+		if err := vr.ReadNull(); err != nil {
+			return err
+		}
+		ts = nil
+	case bson.TypeUndefined:
+		if err := vr.ReadUndefined(); err != nil {
+			return err
+		}
+		ts = &timestamppb.Timestamp{}
+	default:
+		return fmt.Errorf("cannot decode %v into a *timestamppb.Timestamp", bsonTyp)
 	}
-	ts, err := ptypes.TimestampProto(t.In(time.UTC))
-	if err != nil {
-		return err
-	}
-	val.Set(reflect.ValueOf(*ts))
+	v.Set(reflect.ValueOf(ts))
 	return nil
 }
