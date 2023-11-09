@@ -1,81 +1,94 @@
 package wrappers_bson
 
 import (
+	"go.mongodb.org/mongo-driver/bson"
 	"reflect"
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/bsonrw/bsonrwtest"
-	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"gotest.tools/v3/assert"
 )
 
-func TestDoubleValueCodec(t *testing.T) {
-	t.Run("EncodeToBsontype", func(t *testing.T) {
-		for _, params := range []struct {
-			val  *wrapperspb.DoubleValue
-			vw   *bsonrwtest.ValueReaderWriter
-			want bsonrwtest.Invoked
-		}{
-			{
-				nil,
-				&bsonrwtest.ValueReaderWriter{BSONType: bsontype.Null},
-				bsonrwtest.WriteNull,
-			},
-			{
-				wrapperspb.Double(3.1415926535),
-				&bsonrwtest.ValueReaderWriter{BSONType: bsontype.Double},
-				bsonrwtest.WriteDouble,
-			},
-		} {
+func TestDoubleValueCodec_Encode(t *testing.T) {
+	type testCase struct {
+		name     string
+		val      *wrapperspb.DoubleValue
+		vw       *bsonrwtest.ValueReaderWriter
+		expected bsonrwtest.Invoked
+	}
+	testCases := []testCase{
+		{
+			"null",
+			nil,
+			&bsonrwtest.ValueReaderWriter{BSONType: bson.TypeNull},
+			bsonrwtest.WriteNull,
+		},
+		{
+			"double",
+			wrapperspb.Double(3.1415926535),
+			&bsonrwtest.ValueReaderWriter{BSONType: bson.TypeDouble},
+			bsonrwtest.WriteDouble,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			c := NewDoubleValueCodec()
-			v := reflect.ValueOf(params.val)
-			err := c.EncodeValue(bsoncodec.EncodeContext{}, params.vw, v)
+			v := reflect.ValueOf(tc.val)
+			err := c.EncodeValue(bsoncodec.EncodeContext{}, tc.vw, v)
 			assert.NilError(t, err)
-			assert.DeepEqual(t, params.want, params.vw.Invoked)
-		}
-	})
-	t.Run("DecodeFromBsontype", func(t *testing.T) {
-		for _, params := range []struct {
-			vr   *bsonrwtest.ValueReaderWriter
-			want *wrapperspb.DoubleValue
-		}{
-			{
-				&bsonrwtest.ValueReaderWriter{
-					BSONType: bsontype.Double,
-					Return:   float64(3.1415926535),
-				},
-				wrapperspb.Double(3.1415926535),
+			assert.DeepEqual(t, tc.expected, tc.vw.Invoked)
+		})
+	}
+}
+func TestDoubleValueCodec_Decode(t *testing.T) {
+	type testCase struct {
+		name     string
+		vr       *bsonrwtest.ValueReaderWriter
+		expected *wrapperspb.DoubleValue
+	}
+	testCases := []testCase{
+		{
+			"double",
+			&bsonrwtest.ValueReaderWriter{
+				BSONType: bson.TypeDouble,
+				Return:   float64(3.1415926535),
 			},
-			{
-				&bsonrwtest.ValueReaderWriter{
-					BSONType: bsontype.String,
-					Return:   "3.1415926535",
-				},
-				wrapperspb.Double(3.1415926535),
+			wrapperspb.Double(3.1415926535),
+		},
+		{
+			"string",
+			&bsonrwtest.ValueReaderWriter{
+				BSONType: bson.TypeString,
+				Return:   "3.1415926535",
 			},
-			{
-				&bsonrwtest.ValueReaderWriter{
-					BSONType: bsontype.Null,
-				},
-				nil,
+			wrapperspb.Double(3.1415926535),
+		},
+		{
+			"null",
+			&bsonrwtest.ValueReaderWriter{
+				BSONType: bson.TypeNull,
 			},
-			{
-				&bsonrwtest.ValueReaderWriter{
-					BSONType: bsontype.Undefined,
-				},
-				&wrapperspb.DoubleValue{},
+			nil,
+		},
+		{
+			"undefined",
+			&bsonrwtest.ValueReaderWriter{
+				BSONType: bson.TypeUndefined,
 			},
-		} {
-			t.Run(params.vr.Type().String(), func(t *testing.T) {
-				c := NewDoubleValueCodec()
-				got := reflect.New(reflect.TypeOf(params.want)).Elem()
-				err := c.DecodeValue(bsoncodec.DecodeContext{}, params.vr, got)
-				assert.NilError(t, err)
-				assert.DeepEqual(t, params.want, got.Interface(), protocmp.Transform())
-			})
-		}
-	})
+			&wrapperspb.DoubleValue{},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := NewDoubleValueCodec()
+			got := reflect.New(reflect.TypeOf(tc.expected)).Elem()
+			err := c.DecodeValue(bsoncodec.DecodeContext{}, tc.vr, got)
+			assert.NilError(t, err)
+			assert.DeepEqual(t, tc.expected, got.Interface(), protocmp.Transform())
+		})
+	}
 }

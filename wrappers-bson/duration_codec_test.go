@@ -14,7 +14,7 @@ import (
 )
 
 func TestDurationCodec_Encode(t *testing.T) {
-	elapsed := time.Now().Sub(time.Date(2021, 3, 31, 0, 21, 0, 0, time.UTC))
+	elapsed := time.Since(time.Date(2021, 3, 31, 0, 21, 0, 0, time.UTC))
 	type testCase struct {
 		name     string
 		dur      *durationpb.Duration
@@ -47,7 +47,7 @@ func TestDurationCodec_Encode(t *testing.T) {
 }
 
 func TestDurationCodec_Decode(t *testing.T) {
-	elapsed := time.Now().Sub(time.Date(2021, 3, 31, 0, 21, 0, 0, time.UTC))
+	elapsed := time.Since(time.Date(2021, 3, 31, 0, 21, 0, 0, time.UTC))
 	type testCase struct {
 		name     string
 		vr       *bsonrwtest.ValueReaderWriter
