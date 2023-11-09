@@ -1,0 +1,6 @@
+site_name: protomongo-google
+nav:
+  - Home: index.md
+
+plugins:
+  - techdocs-core
