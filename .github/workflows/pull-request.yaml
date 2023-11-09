@@ -1,0 +1,14 @@
+on:
+  pull_request:
+    branches:
+      - main
+
+name: PR Builder
+jobs:
+  check-pr:
+    name: Check Go PR
+    uses: pepper-iot/github-actions/.github/workflows/go-pull-request.yml@main
+    secrets: inherit
+    with:
+      skip-kube-validation: true
+      skip-proto-validation: true

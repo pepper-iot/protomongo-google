@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: protomongo-google
+  title: MongoDB Google Protocol Buffer Codecs
+  description: Codecs for Google Protocol Buffer types used in MongoDB
+  annotations:
+    github.com/project-slug: pepper-iot/protomongo-google
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - golang
+spec:
+  type: library
+  owner: group:default/core-services
+  lifecycle: experimental

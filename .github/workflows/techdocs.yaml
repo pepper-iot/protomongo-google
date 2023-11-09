@@ -1,0 +1,17 @@
+name: Publish TechDocs Site
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    # Run only when TechDocs related files are updated.
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+
+jobs:
+  publish-techdocs-site:
+    uses: pepper-iot/github-actions/.github/workflows/techdocs.yml@main
+    with:
+      backstage_entity_name: protomongo-google
+    secrets: inherit
