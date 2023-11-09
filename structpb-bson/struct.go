@@ -49,7 +49,6 @@ func (c StructCodec) DecodeValue(dc bsoncodec.DecodeContext, vr bsonrw.ValueRead
 	if !val.IsValid() || val.Type() != ProtoStructType {
 		return bsoncodec.ValueDecoderError{Name: "StructCodec.DecodeValue", Types: []reflect.Type{ProtoStructType}, Received: val}
 	}
-	fmt.Println("StructCodec.DecodeValue")
 
 	fieldsField := val.FieldByName("Fields") // the 'Fields' field
 

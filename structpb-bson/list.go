@@ -1,6 +1,7 @@
 package structpb_bson
 
 import (
+	"errors"
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
 	"reflect"
@@ -37,7 +38,7 @@ func (c ListCodec) DecodeValue(dc bsoncodec.DecodeContext, vr bsonrw.ValueReader
 	var elems []reflect.Value
 	for {
 		vr, err := ar.ReadValue()
-		if err == bsonrw.ErrEOA {
+		if errors.Is(err, bsonrw.ErrEOA) {
 			break
 		}
 		if err != nil {

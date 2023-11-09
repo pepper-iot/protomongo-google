@@ -83,3 +83,8 @@ func (c *TimestampCodec) DecodeValue(dc bsoncodec.DecodeContext, vr bsonrw.Value
 	v.Set(reflect.ValueOf(ts))
 	return nil
 }
+
+// NewTimestampCodec returns a TimestampCodec.
+func NewTimestampCodec() *TimestampCodec {
+	return &TimestampCodec{}
+}

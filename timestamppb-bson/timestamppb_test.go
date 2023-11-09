@@ -37,7 +37,7 @@ func Test_TimestampCodecEncodeValue(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			c := TimestampCodec{}
+			c := NewTimestampCodec()
 			v := reflect.ValueOf(tc.ts)
 			err := c.EncodeValue(bsoncodec.EncodeContext{}, tc.vw, v)
 			assert.NilError(t, err)
@@ -53,13 +53,13 @@ func Test_TimestampCodecDecodeValue(t *testing.T) {
 		expected *timestamppb.Timestamp
 	}
 
-	ts := timestamppb.New(time.Date(2022, 5, 30, 11, 43, 26, 0, time.UTC))
+	ts := timestamppb.New(time.Date(2021, 3, 31, 0, 21, 0, 0, time.UTC))
 	testCases := []testCase{
 		{
 			name: "datetime",
 			vr: &bsonrwtest.ValueReaderWriter{
 				BSONType: bson.TypeDateTime,
-				Return:   int64(1653911006000),
+				Return:   int64(1617150060000),
 			},
 			expected: ts,
 		},
@@ -67,7 +67,7 @@ func Test_TimestampCodecDecodeValue(t *testing.T) {
 			name: "int64",
 			vr: &bsonrwtest.ValueReaderWriter{
 				BSONType: bson.TypeInt64,
-				Return:   int64(1653911006000),
+				Return:   int64(1617150060000),
 			},
 			expected: ts,
 		},
@@ -75,7 +75,7 @@ func Test_TimestampCodecDecodeValue(t *testing.T) {
 			name: "string",
 			vr: &bsonrwtest.ValueReaderWriter{
 				BSONType: bson.TypeString,
-				Return:   "2022-05-30T11:43:26Z",
+				Return:   "2021-03-31T00:21:00Z",
 			},
 			expected: ts,
 		},
@@ -96,7 +96,7 @@ func Test_TimestampCodecDecodeValue(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			c := TimestampCodec{}
+			c := NewTimestampCodec()
 			got := reflect.New(reflect.TypeOf(tc.expected)).Elem()
 			err := c.DecodeValue(bsoncodec.DecodeContext{}, tc.vr, got)
 			assert.NilError(t, err)
