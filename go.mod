@@ -1,6 +1,6 @@
 module github.com/pepper-iot/protomongo-google
 
-go 1.21.3
+go 1.21
 
 require (
 	github.com/gogo/protobuf v1.3.2
